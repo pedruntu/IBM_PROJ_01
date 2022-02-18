@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.views import generic
 from django.contrib.auth import login, logout, authenticate
 import logging
-from .models import Course, Enrollment, Question, Choice, Submission #Lesson?
+from .models import Course, Enrollment, Question, Choice, Submission, Answer
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 # Create your views here.
@@ -120,19 +120,30 @@ def submit(request, course_id):
     print('Curso N°:', course_id, 'Nombre del Curso:',course.name)
     print('User Num:', user.id, user.username,user.first_name, user.last_name)
     enrollment=Enrollment.objects.get(course=course_id, user=user.id)
-    print('Enrollment User:', enrollment.user_id, 'mode:',enrollment.mode)
-
-
-    # Now collect answers (selected choices)
+    print('Enrollment ID:',enrollment.id, 'User:', enrollment.user_id, 'mode:',enrollment.mode)
+    
+    #Create Submission object
+    submission= Submission.objects.create(enrollment_id= enrollment.id)
+    print('Submission ID:', submission.id)
+    # Now collect selected choices and create Answer objects
     print('Respuestas')
     selected_choices=extract_answers(request)
     for selected_choice in selected_choices:
-        print('Choice ID:',selected_choice)
+        choice = Choice.objects.get(pk=selected_choice)
+        #print('Choice ID:',selected_choice)
+        #answer= Answer.objects.create(submission_id= submission, choice_id= Choice.id(selected_choice))
+        answer= Answer.objects.create(submission_id= submission, choice_id= choice )
+        #answer= Answer(submission_id= submission)
+        #answer.save()
+        #answer.choice.add(choice)
+        #anwser.choice_id.set(5)
+        #Answer.objects.create(submission_id= submission, choice_id=selected_choice)
+        print('Created Answer ID:', answer.id, 'Choice:', answer.choice_id)
 
-    #Submission.objects.create(user)
-    Submission.objects.create(enrollment= enrollment.id)
-    return redirect('onlinecourse:show_exam_result')
-    #enroll= Enrollment.objects.get(user=user, course= course_id)
+
+    return redirect('onlinecourse:index')
+    #return redirect('onlinecourse:show_exam_result')
+    
 
 
 # <HINT> A example method to collect the selected choices from the exam form from the request object
