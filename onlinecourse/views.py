@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
 # <HINT> Import any new Models here
-from .models import Course, Enrollment
+#from .models import Course, Enrollment
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
@@ -104,6 +104,7 @@ def enroll(request, course_id):
     return HttpResponseRedirect(reverse(viewname='onlinecourse:course_details', args=(course.id,)))
 
 
+
 # <HINT> Create a submit view to create an exam submission record for a course enrollment,
 # you may implement it based on following logic:
          # Get user and course object, then get the associated enrollment object created when the user enrolled the course
@@ -112,10 +113,9 @@ def enroll(request, course_id):
          # Add each selected choice object to the submission object
          # Redirect to show_exam_result with the submission id
 def submit(request, course_id):
+    #context = {}
     user = request.user
-    course = get_object_or_404(Course, pk=course_id)
-    #course=request.course
-    #course= Course.objects.filter(pk=course_id)
+    course = get_object_or_404(Course, pk=course_id)    
     print('Al hacer click en Submit de examen')
     print('Curso N°:', course_id, 'Nombre del Curso:',course.name)
     print('User Num:', user.id, user.username,user.first_name, user.last_name)
@@ -128,21 +128,16 @@ def submit(request, course_id):
     # Now collect selected choices and create Answer objects
     print('Respuestas')
     selected_choices=extract_answers(request)
-    for selected_choice in selected_choices:
-        choice = Choice.objects.get(pk=selected_choice)
-        #print('Choice ID:',selected_choice)
-        #answer= Answer.objects.create(submission_id= submission, choice_id= Choice.id(selected_choice))
-        answer= Answer.objects.create(submission_id= submission, choice_id= choice )
-        #answer= Answer(submission_id= submission)
-        #answer.save()
-        #answer.choice.add(choice)
-        #anwser.choice_id.set(5)
-        #Answer.objects.create(submission_id= submission, choice_id=selected_choice)
+    for selected_choice in selected_choices:        
+
+        choice = Choice.objects.get(pk=selected_choice) #lo saco por ahora
+        #print('Choice ID:',int(selected_choice))                
+        answer= Answer.objects.create(submission= submission, choice= choice ) #it must be an instance  
+        
         print('Created Answer ID:', answer.id, 'Choice:', answer.choice_id)
+     
+    return redirect('onlinecourse:show_exam_result',course_id, submission.id)
 
-
-    return redirect('onlinecourse:index')
-    #return redirect('onlinecourse:show_exam_result')
     
 
 
@@ -164,8 +159,56 @@ def extract_answers(request):
         # For each selected choice, check if it is a correct answer or not
         # Calculate the total score
 def show_exam_result(request, course_id, submission_id):
-        #return render(request, 'onlinecourse/user_login_bootstrap.html', context)
-        return render(request, 'onlinecourse/exam_result_bootstrap.html')
+    print('Arrived to show exam view')
+    
+
+    context={}
+    course = get_object_or_404(Course, pk=course_id)
+    questions= Question.objects.filter(course_id=course_id)
+    
+    submission = get_object_or_404(Submission, pk=submission_id)
+    
+
+       
+    
+    answs_subm=Answer.objects.filter(submission=submission_id)
+    
+    print('Course:',course.id,' Questions:',questions.count(),' Submission:',submission.id,' Answers:',answs_subm.count()) 
+    
+    # Clasify submitted answers
+    total_score=0 
+    for question in questions:
+        ans4check=[]
+        for answ_subm in answs_subm:            
+            #print('Answer ID:',answ_subm.id,' Choice ID:', answ_subm.choice_id)             
+            choi= Choice.objects.get(id=answ_subm.choice_id)                             
+            print(' SelectedChoice ID:', answ_subm.choice_id,'From question:',choi.question_id)
+            if choi.question_id==question.id:
+                ans4check.append(answ_subm.choice_id)  
+
+        is_corr= Question.is_get_score( question,ans4check)
+        print('Question:',question.id, 'Answers',ans4check,' Is correct?',is_corr)
+        if is_corr: total_score=total_score+question.grade
+
+        
+        
+    print('Exam Total Score:', total_score)
+    
+
+    
+
+
+
+
+
+    context['course'] = "course_id"
+
+
+    
+    #return render(request, 'onlinecourse/exam_result_bootstrap.html',context)
+    #return render(request, 'onlinecourse/exam_result_bootstrap.html',course_id,submission_id)
+    return render(request, "onlinecourse/Hello.html")
+
 
 
 

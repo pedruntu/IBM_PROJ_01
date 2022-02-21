@@ -6,8 +6,8 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
-
- <nav class="navbar navbar-light bg-light">
+<!-- NAVIGATION BAR -->
+<nav class="navbar navbar-light bg-light">
     <div class="container-fluid">
         <div class="navbar-header">
               <a class="navbar-brand" href="{% url 'onlinecourse:index' %}">Home</a>
@@ -35,6 +35,7 @@
     </div>
 </nav>
 
+<!-- SHOW EXAM RESULT -->
 <div class="container-fluid">
     {% if grade > 80 %}
     <div class="alert alert-success">
