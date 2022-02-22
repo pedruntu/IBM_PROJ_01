@@ -160,54 +160,55 @@ def extract_answers(request):
         # Calculate the total score
 def show_exam_result(request, course_id, submission_id):
     print('Arrived to show exam view')
-    
-
     context={}
     course = get_object_or_404(Course, pk=course_id)
-    questions= Question.objects.filter(course_id=course_id)
-    
-    submission = get_object_or_404(Submission, pk=submission_id)
-    
-
-       
-    
-    answs_subm=Answer.objects.filter(submission=submission_id)
-    
+    questions= Question.objects.filter(course_id=course_id)    
+    submission = get_object_or_404(Submission, pk=submission_id)    
+    answs_subm=Answer.objects.filter(submission=submission_id)    
     print('Course:',course.id,' Questions:',questions.count(),' Submission:',submission.id,' Answers:',answs_subm.count()) 
     
-    # Clasify submitted answers
-    total_score=0 
+    # Process submitted answers
+    total_score=0 ; base_score=0; sel_choi={}; q_corr={}
+
     for question in questions:
+        for an_q in Choice.objects.filter(question=question.id):
+            sel_choi[an_q.id]= False   
         ans4check=[]
         for answ_subm in answs_subm:            
             #print('Answer ID:',answ_subm.id,' Choice ID:', answ_subm.choice_id)             
             choi= Choice.objects.get(id=answ_subm.choice_id)                             
             print(' SelectedChoice ID:', answ_subm.choice_id,'From question:',choi.question_id)
             if choi.question_id==question.id:
-                ans4check.append(answ_subm.choice_id)  
+                ans4check.append(answ_subm.choice_id)
+                sel_choi[answ_subm.choice_id]=True              
 
         is_corr= Question.is_get_score( question,ans4check)
         print('Question:',question.id, 'Answers',ans4check,' Is correct?',is_corr)
-        if is_corr: total_score=total_score+question.grade
+        base_score=base_score+question.grade
+        if is_corr: 
+            total_score=total_score+question.grade
+            q_corr[question.id]=True
+        else:
+            q_corr[question.id]=False
 
         
         
-    print('Exam Total Score:', total_score)
+    print('Exam Total Score:', total_score,' Base Score:',base_score)
+
+ 
+    #print(sel_choi[1],sel_choi[2],sel_choi[4])
+    print('Correct Questions:',q_corr)
+    print('Choices',sel_choi)
+
+    context={'course': course,  'grade': total_score,'base':base_score, 'q_corr':q_corr,'sel_choi':sel_choi}
+ 
     
 
     
-
-
-
-
-
-    context['course'] = "course_id"
-
-
     
-    #return render(request, 'onlinecourse/exam_result_bootstrap.html',context)
-    #return render(request, 'onlinecourse/exam_result_bootstrap.html',course_id,submission_id)
-    return render(request, "onlinecourse/Hello.html")
+    return render(request, 'onlinecourse/exam_result_bootstrap.html',context)
+    
+    #return render(request, "onlinecourse/Hello.html")
 
 
 
