@@ -1,7 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
 # <HINT> Import any new Models here
-#from .models import Course, Enrollment
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
@@ -11,9 +10,7 @@ import logging
 from .models import Course, Enrollment, Question, Choice, Submission, Answer
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
-# Create your views here.
-
-
+# Create your views here
 def registration_request(request):
     context = {}
     if request.method == 'GET':
@@ -84,16 +81,13 @@ class CourseListView(generic.ListView):
                 course.is_enrolled = check_if_enrolled(user, course)
         return courses
 
-
 class CourseDetailView(generic.DetailView):
     model = Course
     template_name = 'onlinecourse/course_detail_bootstrap.html'
 
-
 def enroll(request, course_id):
     course = get_object_or_404(Course, pk=course_id)
     user = request.user
-
     is_enrolled = check_if_enrolled(user, course)
     if not is_enrolled and user.is_authenticated:
         # Create an enrollment
@@ -103,22 +97,14 @@ def enroll(request, course_id):
 
     return HttpResponseRedirect(reverse(viewname='onlinecourse:course_details', args=(course.id,)))
 
-
-
-# <HINT> Create a submit view to create an exam submission record for a course enrollment,
-# you may implement it based on following logic:
-         # Get user and course object, then get the associated enrollment object created when the user enrolled the course
-         # Create a submission object referring to the enrollment
-         # Collect the selected choices from exam form
-         # Add each selected choice object to the submission object
-         # Redirect to show_exam_result with the submission id
+# Submit view, exam submission
 def submit(request, course_id):
     #context = {}
     user = request.user
     course = get_object_or_404(Course, pk=course_id)    
-    print('Al hacer click en Submit de examen')
-    print('Curso N°:', course_id, 'Nombre del Curso:',course.name)
-    print('User Num:', user.id, user.username,user.first_name, user.last_name)
+    print('When click on submit button')
+    print('Course N°:', course_id, 'Name:',course.name)
+    print('User N°:', user.id, user.username,user.first_name, user.last_name)
     enrollment=Enrollment.objects.get(course=course_id, user=user.id)
     print('Enrollment ID:',enrollment.id, 'User:', enrollment.user_id, 'mode:',enrollment.mode)
     
@@ -126,22 +112,16 @@ def submit(request, course_id):
     submission= Submission.objects.create(enrollment_id= enrollment.id)
     print('Submission ID:', submission.id)
     # Now collect selected choices and create Answer objects
-    print('Respuestas')
+    print('Answers form form:')
     selected_choices=extract_answers(request)
-    for selected_choice in selected_choices:        
-
-        choice = Choice.objects.get(pk=selected_choice) #lo saco por ahora
-        #print('Choice ID:',int(selected_choice))                
-        answer= Answer.objects.create(submission= submission, choice= choice ) #it must be an instance  
-        
-        print('Created Answer ID:', answer.id, 'Choice:', answer.choice_id)
-     
+    for selected_choice in selected_choices:   
+        choice = Choice.objects.get(pk=selected_choice)                         
+        answer= Answer.objects.create(submission= submission, choice= choice ) #it must be an instance         
+        print('Created Answer ID:', answer.id, 'Choice:', answer.choice_id)             
     return redirect('onlinecourse:show_exam_result',course_id, submission.id)
 
     
-
-
-# <HINT> A example method to collect the selected choices from the exam form from the request object
+# A example method to collect the selected choices from the exam form from the request object
 def extract_answers(request):
     submitted_anwsers = []
     for key in request.POST:
@@ -193,12 +173,10 @@ def show_exam_result(request, course_id, submission_id):
 
         
         
-    print('Exam Total Score:', total_score,' Base Score:',base_score)
-
- 
+    #print('Exam Total Score:', total_score,' Base Score:',base_score) 
     #print(sel_choi[1],sel_choi[2],sel_choi[4])
-    print('Correct Questions:',q_corr)
-    print('Choices',sel_choi)
+    #print('Correct Questions:',q_corr)
+    #print('Choices',sel_choi)
 
     context={'course': course,  'grade': total_score,'base':base_score, 'q_corr':q_corr,'sel_choi':sel_choi}
  
