@@ -1,7 +1,10 @@
-<!-- Use layout.hatml for heading and nav bar, common to all templates -->
+<!-- Use layout.html for heading and nav bar, common to all templates -->
 {% extends "onlinecourse/layout.html" %}
 
 {% block body %}
+
+<!-- Custom tag in templatetags folder, for using dictionaries in template -->
+{% load custom_tags %}
 
 <!-- SHOW EXAM RESULT -->
 <div class="container-fluid">
